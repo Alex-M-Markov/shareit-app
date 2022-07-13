@@ -1,4 +1,4 @@
-package ru.practicum.shareit.item.model;
+package shareit.app.item.model;
 
 /**
  * // TODO .

@@ -1,4 +1,4 @@
-package ru.practicum.shareit.booking;
+package shareit.app.booking;
 
 /**
  * // TODO .

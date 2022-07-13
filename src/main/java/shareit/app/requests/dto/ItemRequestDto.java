@@ -1,4 +1,4 @@
-package ru.practicum.shareit.requests.dto;
+package shareit.app.requests.dto;
 
 /**
  * // TODO .

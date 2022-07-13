@@ -1,4 +1,4 @@
-package ru.practicum.shareit.user;
+package shareit.app.requests;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -7,6 +7,6 @@ import org.springframework.web.bind.annotation.RestController;
  * // TODO .
  */
 @RestController
-@RequestMapping(path = "/users")
-public class UserController {
+@RequestMapping(path = "/requests")
+public class ItemRequestController {
 }

@@ -1,4 +1,4 @@
-package ru.practicum.shareit.user;
+package shareit.app.user;
 
 /**
  * // TODO .
