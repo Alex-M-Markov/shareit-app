@@ -2,6 +2,6 @@ package shareit.app.item;
 
 public interface ItemService {
 
-// Добавить функционал в следующих спринтах
+//TODO Добавить функционал в следующих спринтах
 
 }
