@@ -1,5 +1,6 @@
 package shareit.app.item;
 
+import java.time.LocalDateTime;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -11,30 +12,26 @@ import javax.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import shareit.app.request.ItemRequest;
 import shareit.app.user.User;
 
 @Entity
-@Table(name = "items")
+@Table(name = "comments")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Item {
+public class Comment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(name = "name")
-    private String name;
-    @Column(name = "description")
-    private String description;
-    @Column(name = "available")
-    private Boolean available;
+    @Column(name = "text")
+    private String text;
     @ManyToOne
-    @JoinColumn(name = "owner_id")
-    private User owner;
+    @JoinColumn(name = "item_id")
+    private Item item;
     @ManyToOne
-    @JoinColumn(name = "request_id")
-    private ItemRequest request;
-
+    @JoinColumn(name = "author_id")
+    private User author;
+    @Column(name = "created")
+    LocalDateTime created;
 }
