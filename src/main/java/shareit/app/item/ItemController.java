@@ -35,18 +35,25 @@ public class ItemController {
     }
 
     @GetMapping("/{itemId}")
-    public ItemDto getItemById(@PathVariable Long itemId) {
-        return itemServiceImpl.getItemById(itemId);
+    public ItemDtoWithBookings getItemByIdWithBookings(@RequestHeader(USER_HEADER) Long userId,
+        @PathVariable Long itemId) {
+        return itemServiceImpl.getItemByIdWithBookings(userId, itemId);
     }
 
     @GetMapping
-    public Collection<ItemDto> getAllItemsOfUser(@RequestHeader(USER_HEADER) Long userId) {
+    public Collection<ItemDtoWithBookings> getAllItemsOfUser(@RequestHeader(USER_HEADER) Long userId) {
         return itemServiceImpl.getAllItemsOfUser(userId);
     }
 
     @GetMapping("/search")
     public Collection<ItemDto> getAllMatchingItems(@RequestParam String text) {
         return itemServiceImpl.getAllMatchingItems(text);
+    }
+
+    @PostMapping("/{itemId}/comment")
+    public CommentDtoToReturn postComment(@RequestHeader(USER_HEADER) Long userId,
+        @PathVariable Long itemId, @Valid @RequestBody CommentDto text) {
+        return itemServiceImpl.postComment(userId, itemId, text);
     }
 
 }
