@@ -51,7 +51,7 @@ public class UserServiceImpl implements UserService {
         try {
             return UserMapper.toUserDto(userRepository.getReferenceById(id));
         } catch (EntityNotFoundException e) {
-            throw new UserNotFoundException();
+            throw new UserNotFoundException(e);
         }
     }
 

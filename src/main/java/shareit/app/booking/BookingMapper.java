@@ -1,6 +1,5 @@
 package shareit.app.booking;
 
-import lombok.Data;
 import shareit.app.booking.BookingDtoToReturn.Booker;
 import shareit.app.booking.BookingDtoToReturn.Item;
 import shareit.app.item.ItemDto;
@@ -8,7 +7,6 @@ import shareit.app.item.ItemMapper;
 import shareit.app.user.UserDto;
 import shareit.app.user.UserMapper;
 
-@Data
 public class BookingMapper {
 
     public static BookingDtoToReturn toBookingDto(Booking booking) {

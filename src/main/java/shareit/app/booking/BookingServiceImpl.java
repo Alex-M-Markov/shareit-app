@@ -84,7 +84,7 @@ public class BookingServiceImpl implements BookingService {
             }
             return BookingMapper.toBookingDto(booking);
         } catch (EntityNotFoundException e) {
-            throw new BookingNotFoundException();
+            throw new BookingNotFoundException(e);
         }
     }
 

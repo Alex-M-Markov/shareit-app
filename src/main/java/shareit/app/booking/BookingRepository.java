@@ -44,9 +44,3 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     Booking findFirstByItem_IdAndStartIsAfterAndStatusIs(Long itemId, LocalDateTime current,
         BookingStatus status, Long userId);
 }
-/*
-
-    select i from Item i " +
-    "where upper(i.name) like upper(concat('%', ?1, '%')) " +
-    " or upper(i.description) like upper(concat('%', ?1, '%'))" +
-    "and i.available is true ")*/

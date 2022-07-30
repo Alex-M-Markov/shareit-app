@@ -1,8 +1,5 @@
 package shareit.app.item;
 
-import lombok.Data;
-
-@Data
 public class CommentMapper {
 
     public static Comment commentDtoToComment(CommentDto commentDto) {

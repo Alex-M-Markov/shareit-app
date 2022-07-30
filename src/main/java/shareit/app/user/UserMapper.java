@@ -1,9 +1,7 @@
 package shareit.app.user;
 
-import lombok.Data;
 import shareit.app.exceptions.UserNotFoundException;
 
-@Data
 public class UserMapper {
 
     public static UserDto toUserDto(User user) {

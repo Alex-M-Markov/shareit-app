@@ -11,7 +11,6 @@ public class CommentDtoToReturn {
     private Long id;
     private String text;
     private String authorName;
-    LocalDateTime created;
+    private LocalDateTime created;
 
 }
-

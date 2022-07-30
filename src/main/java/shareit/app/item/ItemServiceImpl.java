@@ -40,7 +40,7 @@ public class ItemServiceImpl implements ItemService {
         try {
             userService.getUserById(userId);
         } catch (EntityNotFoundException e) {
-            throw new UserNotFoundException();
+            throw new UserNotFoundException(e);
         }
     }
 
@@ -75,7 +75,7 @@ public class ItemServiceImpl implements ItemService {
         try {
             return ItemMapper.toItemDto(itemRepository.getReferenceById((itemId)));
         } catch (EntityNotFoundException e) {
-            throw new ItemNotFoundException();
+            throw new ItemNotFoundException(e);
         }
     }
 
@@ -91,14 +91,15 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemDtoWithBookings getItemByIdWithBookings(Long userId, Long itemId) {
         try {
-            System.out.println(ItemMapper.toItemDtoWithBookings(itemRepository.getReferenceById((itemId)),
-                findLastBooking(userId, itemId), findNextBooking(userId, itemId),
-                findComments(itemId)));
+            System.out.println(
+                ItemMapper.toItemDtoWithBookings(itemRepository.getReferenceById((itemId)),
+                    findLastBooking(userId, itemId), findNextBooking(userId, itemId),
+                    findComments(itemId)));
             return ItemMapper.toItemDtoWithBookings(itemRepository.getReferenceById((itemId)),
                 findLastBooking(userId, itemId), findNextBooking(userId, itemId),
                 findComments(itemId));
         } catch (EntityNotFoundException e) {
-            throw new ItemNotFoundException();
+            throw new ItemNotFoundException(e);
         }
     }
 
