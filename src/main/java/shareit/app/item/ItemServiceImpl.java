@@ -3,9 +3,12 @@ package shareit.app.item;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
 import javax.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
@@ -21,6 +24,7 @@ import shareit.app.user.UserService;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ItemServiceImpl implements ItemService {
 
     private final ItemRepository itemRepository;
@@ -31,9 +35,12 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto create(Long userId, ItemDto item) {
+        log.info("Создается вещь {} пользователя {}", item.getName(), userId);
         checkUserExistence(userId);
-        return ItemMapper.toItemDto(
+        ItemDto itemDto = ItemMapper.toItemDto(
             itemRepository.save((ItemMapper.dtoToItem(item, userService.getUserById(userId)))));
+        log.info("Вещь {} успешно создан", itemDto.getName());
+        return itemDto;
     }
 
     private void checkUserExistence(Long userId) {
@@ -46,11 +53,14 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto update(Long userId, Long itemId, ItemDto item) {
+        log.info("Обновляется вещь {} пользователя {}", item.getName(), userId);
         checkUserExistence(userId);
         checkUpdateRights(userId, itemId);
         ItemDto itemToUpdate = updateItemFields(itemId, item);
-        return ItemMapper.toItemDto(itemRepository.save((
+        ItemDto itemToReturn = ItemMapper.toItemDto(itemRepository.save((
             ItemMapper.dtoToItem(itemToUpdate, userService.getUserById(userId)))));
+        log.info("Вещь {} успешно обновлена", itemToReturn.getName());
+        return itemToReturn;
     }
 
     private ItemDto updateItemFields(Long id, ItemDto item) {
@@ -73,6 +83,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemDto getItemById(Long itemId) {
         try {
+            log.info("Получаем вещь #{}", itemId);
             return ItemMapper.toItemDto(itemRepository.getReferenceById((itemId)));
         } catch (EntityNotFoundException e) {
             throw new ItemNotFoundException(e);
@@ -91,10 +102,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemDtoWithBookings getItemByIdWithBookings(Long userId, Long itemId) {
         try {
-            System.out.println(
-                ItemMapper.toItemDtoWithBookings(itemRepository.getReferenceById((itemId)),
-                    findLastBooking(userId, itemId), findNextBooking(userId, itemId),
-                    findComments(itemId)));
+            log.info("Получаем вещь #{} с бронированиями пользователя {}", itemId, userId);
             return ItemMapper.toItemDtoWithBookings(itemRepository.getReferenceById((itemId)),
                 findLastBooking(userId, itemId), findNextBooking(userId, itemId),
                 findComments(itemId));
@@ -105,7 +113,7 @@ public class ItemServiceImpl implements ItemService {
 
     private Collection<CommentDtoToReturn> findComments(Long itemId) {
         return commentsToDtos(
-            commentRepository.findAllByItem_Id(itemId, Sort.by(Direction.DESC, "created")));
+            commentRepository.findAllByItemId(itemId, Sort.by(Direction.DESC, "created")));
     }
 
     private Collection<CommentDtoToReturn> commentsToDtos(Collection<Comment> comments) {
@@ -115,7 +123,6 @@ public class ItemServiceImpl implements ItemService {
         }
         return commentDtos;
     }
-
 
     private Booking findLastBooking(Long userId, Long itemId) {
         return bookingRepository.findFirstByItem_IdAndEndIsBeforeAndStatusIs(itemId,
@@ -128,20 +135,23 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Collection<ItemDtoWithBookings> getAllItemsOfUser(Long userId) {
+    public List<ItemDtoWithBookings> getAllItemsOfUser(Long userId) {
+        log.info("Получаем все вещи пользователя #{} с бронированиями", userId);
         Collection<Item> items = itemRepository.findAllByOwnerEquals(UserMapper.dtoToUser(
             userService.getUserById((userId))));
-        Collection<ItemDtoWithBookings> itemDtos = new ArrayList<>();
+        List<ItemDtoWithBookings> itemDtos = new ArrayList<>();
         for (Item item : items) {
             itemDtos.add(
                 ItemMapper.toItemDtoWithBookings(item, findLastBooking(userId, item.getId()),
                     findNextBooking(userId, item.getId()), findComments(item.getId())));
         }
+        itemDtos.sort(Comparator.comparingLong(ItemDtoWithBookings::getId));
         return itemDtos;
     }
 
     @Override
     public Collection<ItemDto> getAllMatchingItems(String text) {
+        log.info("Получаем все вещи, содержащие строку {}", text);
         if (text.isEmpty() || text.isBlank()) {
             return new ArrayList<>();
         }
@@ -155,17 +165,21 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public CommentDtoToReturn postComment(Long userId, Long itemId, CommentDto commentDto) {
+        log.info("Постим комментарий пользователя #{} о вещи #{}", userId, itemId);
         commentDto.setCreated(LocalDateTime.now());
         checkComments(userId, itemId);
         commentDto.setAuthor(userRepository.getReferenceById(userId));
         commentDto.setItem(itemRepository.getReferenceById(itemId));
-        return CommentMapper.commentToCommentDtoToReturn(
+        CommentDtoToReturn commentDtoToReturn = CommentMapper.commentToCommentDtoToReturn(
             commentRepository.save(CommentMapper.commentDtoToComment(commentDto)));
+        log.info("Комментарий успешно опубликован");
+        return commentDtoToReturn;
     }
 
     private void checkComments(Long userId, Long itemId) {
-        if (bookingRepository.findByBooker_IdAndEndIsBefore(userId, LocalDateTime.now(), Sort.by(
-                Direction.DESC, "start")).stream()
+        if (bookingRepository.findByBooker_IdAndEndIsBefore(userId, LocalDateTime.now(),
+                Sort.by(
+                    Direction.DESC, "start")).stream()
             .noneMatch(x -> x.getItem().getId().equals(itemId))) {
             throw new CommentNotAllowedException(
                 "Вы не можете оставлять комментарий для этой вещи");

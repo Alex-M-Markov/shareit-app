@@ -9,5 +9,6 @@ public enum BookingIncomingStates {
     PAST,
     FUTURE,
     WAITING,
-    REJECTED
+    REJECTED,
+    UNSUPPORTED_STATUS
 }

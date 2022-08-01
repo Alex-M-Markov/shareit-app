@@ -6,18 +6,21 @@ import java.util.Collection;
 import java.util.Objects;
 import javax.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 import shareit.app.exceptions.BookingNotFoundException;
 import shareit.app.exceptions.IllegalBookingAccess;
 import shareit.app.exceptions.IllegalBookingException;
+import shareit.app.exceptions.IllegalInputException;
 import shareit.app.exceptions.ItemNotFoundException;
 import shareit.app.item.ItemService;
 import shareit.app.user.UserService;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
@@ -26,12 +29,15 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public BookingDtoToReturn create(Long userId, BookingDtoIncoming booking) {
+        log.info("Создается бронирование #{} для пользователя {}", booking.getId(), userId);
         checkIncomingBooking(booking, userId);
         booking.setStatus(BookingStatus.WAITING);
-        return BookingMapper.toBookingDto(
+        BookingDtoToReturn bookingDtoToReturn = BookingMapper.toBookingDto(
             bookingRepository.save(
                 BookingMapper.dtoIncomingToBooking(booking, userService.getUserById(userId),
                     itemService.getItemById(booking.getItemId()))));
+        log.info("Бронирование #{} успешно создано", bookingDtoToReturn.getId());
+        return bookingDtoToReturn;
     }
 
     private void checkIncomingBooking(BookingDtoIncoming booking, Long userId) {
@@ -58,6 +64,7 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public BookingDtoToReturn update(Long userId, Long bookingId, Boolean approved) {
+        log.info("Обновляется бронирование #{} для пользователя {}", bookingId, userId);
         Booking booking = bookingRepository.getReferenceById(bookingId);
         if (!Objects.equals(userId, booking.getItem().getOwner().getId())) {
             throw new IllegalBookingAccess("У Вас нет прав на просмотр этого бронирования");
@@ -70,11 +77,15 @@ public class BookingServiceImpl implements BookingService {
         } else {
             booking.setStatus(BookingStatus.REJECTED);
         }
-        return BookingMapper.toBookingDto(bookingRepository.save(booking));
+        BookingDtoToReturn bookingDtoToReturn = BookingMapper.toBookingDto(
+            bookingRepository.save(booking));
+        log.info("Бронирование #{} успешно создано", bookingDtoToReturn.getId());
+        return bookingDtoToReturn;
     }
 
     @Override
     public BookingDtoToReturn getBookingById(Long userId, Long bookingId) {
+        log.info("Получаем бронирование #{} пользователя {}", bookingId, userId);
         try {
             Booking booking = bookingRepository.getReferenceById(bookingId);
             if (!Objects.equals(userId, booking.getBooker().getId()) && !Objects.equals(userId,
@@ -91,14 +102,19 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public Collection<BookingDtoToReturn> getAllBookingsOfUser(Long userId,
         BookingIncomingStates bookingState) {
+        log.info("Получаем все бронирования пользователя #{} со статусом {}", userId, bookingState);
         Sort sort = Sort.by(Direction.DESC, "start");
-        LocalDateTime end = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now();
+        if (userService.getUserById(userId) == null) {
+            throw new IllegalInputException("Для этого пользователя бронирований нет");
+        }
         switch (bookingState) {
             case ALL:
                 return bookingsToDtos(bookingRepository.findByBooker_Id(userId, sort));
             case CURRENT:
-                return bookingsToDtos(bookingRepository.findByBooker_IdAndStatusIs(userId,
-                    BookingStatus.APPROVED, sort));
+                return bookingsToDtos(
+                    bookingRepository.findByBooker_IdAndStartIsBeforeAndEndIsAfter(userId, now, now,
+                        sort));
             case WAITING:
                 return bookingsToDtos(bookingRepository.findByBooker_IdAndStatusIs(userId,
                     BookingStatus.WAITING, sort));
@@ -107,12 +123,12 @@ public class BookingServiceImpl implements BookingService {
                     BookingStatus.REJECTED, sort));
             case PAST:
                 return bookingsToDtos(bookingRepository.findByBooker_IdAndEndIsBefore(userId,
-                    end, sort));
+                    now, sort));
             case FUTURE:
                 return bookingsToDtos(bookingRepository.findByBooker_IdAndEndIsAfter(userId,
-                    end, sort));
+                    now, sort));
         }
-        return new ArrayList<>();
+        throw new IllegalBookingAccess("Невозможно получить вещи другого пользователя");
     }
 
     private Collection<BookingDtoToReturn> bookingsToDtos(Collection<Booking> bookings) {
@@ -126,31 +142,41 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public Collection<BookingDtoToReturn> getAllBookingsOfUserItems(Long userId,
         BookingIncomingStates bookingState) {
+        log.info("Получаем все бронирования вещей пользователя #{} со статусом {}", userId,
+            bookingState);
         Sort sort = Sort.by(Direction.DESC, "start");
-        LocalDateTime end = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now();
         if (bookingRepository.findAllByItem_Owner_Id(userId, sort) == null) {
             throw new ItemNotFoundException();
+        }
+        if (userService.getUserById(userId) == null) {
+            throw new IllegalInputException("Для этого пользователя бронирований нет");
         }
         switch (bookingState) {
             case ALL:
                 return bookingsToDtos(bookingRepository.findAllByItem_Owner_Id(userId, sort));
             case CURRENT:
-                return bookingsToDtos(bookingRepository.findAllByItem_Owner_IdAndStatusIs(userId,
-                    BookingStatus.APPROVED, sort));
+                return bookingsToDtos(
+                    bookingRepository.findAllByItem_Owner_IdAndStartIsBeforeAndEndIsAfter(userId,
+                        now, now, sort));
             case WAITING:
-                return bookingsToDtos(bookingRepository.findAllByItem_Owner_IdAndStatusIs(userId,
-                    BookingStatus.WAITING, sort));
+                return bookingsToDtos(
+                    bookingRepository.findAllByItem_Owner_IdAndStatusIs(userId,
+                        BookingStatus.WAITING, sort));
             case REJECTED:
-                return bookingsToDtos(bookingRepository.findAllByItem_Owner_IdAndStatusIs(userId,
-                    BookingStatus.REJECTED, sort));
+                return bookingsToDtos(
+                    bookingRepository.findAllByItem_Owner_IdAndStatusIs(userId,
+                        BookingStatus.REJECTED, sort));
             case PAST:
-                return bookingsToDtos(bookingRepository.findAllByItem_Owner_IdAndEndIsBefore(userId,
-                    end, sort));
+                return bookingsToDtos(
+                    bookingRepository.findAllByItem_Owner_IdAndEndIsBefore(userId,
+                        now, sort));
             case FUTURE:
-                return bookingsToDtos(bookingRepository.findAllByItem_Owner_IdAndEndIsAfter(userId,
-                    end, sort));
+                return bookingsToDtos(
+                    bookingRepository.findAllByItem_Owner_IdAndEndIsAfter(userId,
+                        now, sort));
         }
-        return new ArrayList<>();
+        throw new IllegalBookingAccess("Невозможно получить вещи другого пользователя");
     }
 
 }
