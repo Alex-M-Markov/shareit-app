@@ -125,12 +125,12 @@ public class ItemServiceImpl implements ItemService {
     }
 
     private Booking findLastBooking(Long userId, Long itemId) {
-        return bookingRepository.findFirstByItem_IdAndEndIsBeforeAndStatusIs(itemId,
+        return bookingRepository.findFirstByItemIdAndEndIsBeforeAndStatusIs(itemId,
             LocalDateTime.now(), BookingStatus.APPROVED, userId);
     }
 
     private Booking findNextBooking(Long userId, Long itemId) {
-        return bookingRepository.findFirstByItem_IdAndStartIsAfterAndStatusIs(itemId,
+        return bookingRepository.findFirstByItemIdAndStartIsAfterAndStatusIs(itemId,
             LocalDateTime.now(), BookingStatus.APPROVED, userId);
     }
 
@@ -177,7 +177,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     private void checkComments(Long userId, Long itemId) {
-        if (bookingRepository.findByBooker_IdAndEndIsBefore(userId, LocalDateTime.now(),
+        if (bookingRepository.findByBookerIdAndEndIsBefore(userId, LocalDateTime.now(),
                 Sort.by(
                     Direction.DESC, "start")).stream()
             .noneMatch(x -> x.getItem().getId().equals(itemId))) {

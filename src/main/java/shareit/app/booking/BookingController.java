@@ -49,10 +49,7 @@ public class BookingController {
     public Collection<BookingDtoToReturn> getAllBookingsOfUser(
         @RequestHeader(USER_HEADER) Long userId,
         @RequestParam(name = "state", required = false, defaultValue = "ALL")
-        BookingIncomingStates bookingState) throws UnsupportedStatusException {
-        if (bookingState.equals(BookingIncomingStates.UNSUPPORTED_STATUS)) {
-            throw new UnsupportedStatusException("Unknown state: UNSUPPORTED_STATUS");
-        }
+        BookingIncomingStates bookingState) {
         return bookingServiceImpl.getAllBookingsOfUser(userId, bookingState);
     }
 
@@ -61,9 +58,6 @@ public class BookingController {
         @RequestHeader(USER_HEADER) Long userId,
         @RequestParam(name = "state", required = false, defaultValue = "ALL")
         BookingIncomingStates bookingState) throws UnsupportedStatusException {
-        if (bookingState.equals(BookingIncomingStates.UNSUPPORTED_STATUS)) {
-            throw new UnsupportedStatusException("Unknown state: UNSUPPORTED_STATUS");
-        }
         return bookingServiceImpl.getAllBookingsOfUserItems(userId, bookingState);
     }
 

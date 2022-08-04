@@ -15,6 +15,7 @@ import shareit.app.exceptions.IllegalBookingAccess;
 import shareit.app.exceptions.IllegalBookingException;
 import shareit.app.exceptions.IllegalInputException;
 import shareit.app.exceptions.ItemNotFoundException;
+import shareit.app.exceptions.UnsupportedStatusException;
 import shareit.app.item.ItemService;
 import shareit.app.user.UserService;
 
@@ -102,6 +103,9 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public Collection<BookingDtoToReturn> getAllBookingsOfUser(Long userId,
         BookingIncomingStates bookingState) {
+        if (bookingState.equals(BookingIncomingStates.UNSUPPORTED_STATUS)) {
+            throw new UnsupportedStatusException("Unknown state: UNSUPPORTED_STATUS");
+        }
         log.info("Получаем все бронирования пользователя #{} со статусом {}", userId, bookingState);
         Sort sort = Sort.by(Direction.DESC, "start");
         LocalDateTime now = LocalDateTime.now();
@@ -110,22 +114,22 @@ public class BookingServiceImpl implements BookingService {
         }
         switch (bookingState) {
             case ALL:
-                return bookingsToDtos(bookingRepository.findByBooker_Id(userId, sort));
+                return bookingsToDtos(bookingRepository.findByBookerId(userId, sort));
             case CURRENT:
                 return bookingsToDtos(
-                    bookingRepository.findByBooker_IdAndStartIsBeforeAndEndIsAfter(userId, now, now,
+                    bookingRepository.findByBookerIdAndStartIsBeforeAndEndIsAfter(userId, now, now,
                         sort));
             case WAITING:
-                return bookingsToDtos(bookingRepository.findByBooker_IdAndStatusIs(userId,
+                return bookingsToDtos(bookingRepository.findByBookerIdAndStatusIs(userId,
                     BookingStatus.WAITING, sort));
             case REJECTED:
-                return bookingsToDtos(bookingRepository.findByBooker_IdAndStatusIs(userId,
+                return bookingsToDtos(bookingRepository.findByBookerIdAndStatusIs(userId,
                     BookingStatus.REJECTED, sort));
             case PAST:
-                return bookingsToDtos(bookingRepository.findByBooker_IdAndEndIsBefore(userId,
+                return bookingsToDtos(bookingRepository.findByBookerIdAndEndIsBefore(userId,
                     now, sort));
             case FUTURE:
-                return bookingsToDtos(bookingRepository.findByBooker_IdAndEndIsAfter(userId,
+                return bookingsToDtos(bookingRepository.findByBookerIdAndEndIsAfter(userId,
                     now, sort));
         }
         throw new IllegalBookingAccess("Невозможно получить вещи другого пользователя");
@@ -142,11 +146,14 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public Collection<BookingDtoToReturn> getAllBookingsOfUserItems(Long userId,
         BookingIncomingStates bookingState) {
+        if (bookingState.equals(BookingIncomingStates.UNSUPPORTED_STATUS)) {
+            throw new UnsupportedStatusException("Unknown state: UNSUPPORTED_STATUS");
+        }
         log.info("Получаем все бронирования вещей пользователя #{} со статусом {}", userId,
             bookingState);
         Sort sort = Sort.by(Direction.DESC, "start");
         LocalDateTime now = LocalDateTime.now();
-        if (bookingRepository.findAllByItem_Owner_Id(userId, sort) == null) {
+        if (bookingRepository.findAllByItemOwnerId(userId, sort) == null) {
             throw new ItemNotFoundException();
         }
         if (userService.getUserById(userId) == null) {
@@ -154,26 +161,26 @@ public class BookingServiceImpl implements BookingService {
         }
         switch (bookingState) {
             case ALL:
-                return bookingsToDtos(bookingRepository.findAllByItem_Owner_Id(userId, sort));
+                return bookingsToDtos(bookingRepository.findAllByItemOwnerId(userId, sort));
             case CURRENT:
                 return bookingsToDtos(
-                    bookingRepository.findAllByItem_Owner_IdAndStartIsBeforeAndEndIsAfter(userId,
+                    bookingRepository.findAllByItemOwnerIdAndStartIsBeforeAndEndIsAfter(userId,
                         now, now, sort));
             case WAITING:
                 return bookingsToDtos(
-                    bookingRepository.findAllByItem_Owner_IdAndStatusIs(userId,
+                    bookingRepository.findAllByItemOwnerIdAndStatusIs(userId,
                         BookingStatus.WAITING, sort));
             case REJECTED:
                 return bookingsToDtos(
-                    bookingRepository.findAllByItem_Owner_IdAndStatusIs(userId,
+                    bookingRepository.findAllByItemOwnerIdAndStatusIs(userId,
                         BookingStatus.REJECTED, sort));
             case PAST:
                 return bookingsToDtos(
-                    bookingRepository.findAllByItem_Owner_IdAndEndIsBefore(userId,
+                    bookingRepository.findAllByItemOwnerIdAndEndIsBefore(userId,
                         now, sort));
             case FUTURE:
                 return bookingsToDtos(
-                    bookingRepository.findAllByItem_Owner_IdAndEndIsAfter(userId,
+                    bookingRepository.findAllByItemOwnerIdAndEndIsAfter(userId,
                         now, sort));
         }
         throw new IllegalBookingAccess("Невозможно получить вещи другого пользователя");
