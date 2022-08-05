@@ -7,7 +7,10 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 public class ItemNotFoundException extends RuntimeException {
 
 
+    public ItemNotFoundException(Throwable cause) {
+        super("Такая вещь не найдена", cause);
+    }
+
     public ItemNotFoundException() {
-        super("Такая вещь не найдена");
     }
 }

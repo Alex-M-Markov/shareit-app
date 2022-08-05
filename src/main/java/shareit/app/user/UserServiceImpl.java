@@ -3,26 +3,36 @@ package shareit.app.user;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
-import lombok.AllArgsConstructor;
+import javax.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import shareit.app.exceptions.IllegalInputException;
 import shareit.app.exceptions.UserNotFoundException;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
+@Slf4j
 public class UserServiceImpl implements UserService {
 
-    private final UserStorage userStorage;
+    private final UserRepository userRepository;
 
-
+    @Override
     public UserDto create(UserDto user) {
-        checkMailInput(user);
-        return UserMapper.toUserDto(userStorage.create(UserMapper.dtoToUser(user)));
+        log.info("Создается пользователь {}", user.getName());
+        UserDto userDto = UserMapper.toUserDto(userRepository.save((UserMapper.dtoToUser(user))));
+        log.info("Пользователь {} успешно создан", userDto.getName());
+        return userDto;
     }
 
+    @Override
     public UserDto update(Long id, UserDto user) {
+        log.info("Обновляется пользователь {}", user.getName());
         UserDto userToUpdate = updateUserFields(id, user);
-        return UserMapper.toUserDto(userStorage.update(UserMapper.dtoToUser(userToUpdate)));
+        UserDto userToReturn = UserMapper.toUserDto(
+            userRepository.save((UserMapper.dtoToUser(userToUpdate))));
+        log.info("Пользователь {} успешно обновлен", userToReturn.getName());
+        return userToReturn;
     }
 
     private UserDto updateUserFields(Long id, UserDto user) {
@@ -40,17 +50,28 @@ public class UserServiceImpl implements UserService {
         return userToUpdate;
     }
 
+    @Override
     public void deleteUserById(Long id) {
-        userStorage.deleteUserById(id);
+        log.info("Удаляется пользователь #{}", id);
+        userRepository.deleteById(id);
+        log.info("Пользователь {} успешно удален", id);
     }
 
+    @Override
     public UserDto getUserById(Long id) {
-        return UserMapper.toUserDto(userStorage.getUserById(id));
+        try {
+            log.info("Получаем пользователя #{}", id);
+            return UserMapper.toUserDto(userRepository.getReferenceById(id));
+        } catch (EntityNotFoundException e) {
+            throw new UserNotFoundException(e);
+        }
     }
 
+    @Override
     public Collection<UserDto> getAllUsers() {
+        log.info("Получаем список всех пользователей");
         ArrayList<UserDto> allUsers = new ArrayList<>();
-        for (User user : userStorage.getAllUsers()) {
+        for (User user : userRepository.findAll()) {
             allUsers.add(UserMapper.toUserDto(user));
         }
         return allUsers;
@@ -58,7 +79,7 @@ public class UserServiceImpl implements UserService {
 
     private void checkMailInput(UserDto user) {
         String email = user.getEmail();
-        for (User registeredUser : userStorage.getAllUsers()) {
+        for (User registeredUser : userRepository.findAll()) {
             if (email.equals(registeredUser.getEmail()) && !Objects.equals(user.getId(),
                 registeredUser.getId())) {
                 throw new IllegalInputException("Пользователь с таким E-mail уже существует");

@@ -3,9 +3,12 @@ package shareit.app.booking;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
-public enum BookingStatus {
+public enum BookingIncomingStates {
+    ALL,
+    CURRENT,
+    PAST,
+    FUTURE,
     WAITING,
-    APPROVED,
     REJECTED,
-    CANCELED
+    UNSUPPORTED_STATUS
 }
