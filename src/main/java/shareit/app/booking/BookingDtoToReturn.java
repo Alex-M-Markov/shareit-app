@@ -3,6 +3,7 @@ package shareit.app.booking;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
@@ -15,15 +16,20 @@ public class BookingDtoToReturn {
     private Booker booker;
     private BookingStatus status;
 
+
     @Data
-    protected static class Item {
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class Item {
 
         protected Long id;
         protected String name;
     }
 
     @Data
-    protected static class Booker {
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class Booker {
 
         private Long id;
         private String name;

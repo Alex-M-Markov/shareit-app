@@ -1,5 +1,6 @@
 package shareit.app.item;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import javax.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -41,19 +42,26 @@ public class ItemController {
     }
 
     @GetMapping
-    public Collection<ItemDtoWithBookings> getAllItemsOfUser(@RequestHeader(USER_HEADER) Long userId) {
-        return itemServiceImpl.getAllItemsOfUser(userId);
+    public Collection<ItemDtoWithBookings> getAllItemsOfUser(
+        @RequestHeader(USER_HEADER) Long userId,
+        @RequestParam(name = "from", required = false) Integer firstElement,
+        @RequestParam(name = "size", required = false) Integer numberOfElements) {
+        return itemServiceImpl.getAllItemsOfUser(userId, firstElement, numberOfElements);
     }
 
     @GetMapping("/search")
-    public Collection<ItemDto> getAllMatchingItems(@RequestParam String text) {
-        return itemServiceImpl.getAllMatchingItems(text);
+    public Collection<ItemDto> getAllMatchingItems(
+        @RequestParam String text,
+        @RequestParam(name = "from", required = false) Integer firstElement,
+        @RequestParam(name = "size", required = false) Integer numberOfElements) {
+        return itemServiceImpl.getAllMatchingItems(text, firstElement, numberOfElements);
     }
 
     @PostMapping("/{itemId}/comment")
     public CommentDtoToReturn postComment(@RequestHeader(USER_HEADER) Long userId,
-        @PathVariable Long itemId, @Valid @RequestBody CommentDto text) {
-        return itemServiceImpl.postComment(userId, itemId, text);
+        @PathVariable Long itemId, @Valid @RequestBody CommentDto commentDto) {
+        commentDto.setCreated(LocalDateTime.now());
+        return itemServiceImpl.postComment(userId, itemId, commentDto);
     }
 
 }

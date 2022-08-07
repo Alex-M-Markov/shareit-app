@@ -11,8 +11,8 @@ public interface BookingService {
     BookingDtoToReturn getBookingById(Long userId, Long bookingId);
 
     Collection<BookingDtoToReturn> getAllBookingsOfUser(Long userId,
-        BookingIncomingStates bookingState);
+        BookingIncomingStates bookingState, Integer firstElement, Integer numberOfElements);
 
     Collection<BookingDtoToReturn> getAllBookingsOfUserItems(Long userId,
-        BookingIncomingStates bookingState);
+        BookingIncomingStates bookingState, Integer firstElement, Integer numberOfElements);
 }

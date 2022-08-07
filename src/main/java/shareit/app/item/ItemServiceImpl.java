@@ -9,6 +9,8 @@ import java.util.Objects;
 import javax.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
@@ -32,6 +34,9 @@ public class ItemServiceImpl implements ItemService {
     private final UserRepository userRepository;
     private final UserService userService;
     private final BookingRepository bookingRepository;
+    private static final Integer DEFAULT_PAGE_FIRST_ELEMENT = 0;
+    private static final Integer DEFAULT_PAGE_SIZE = 20;
+
 
     @Override
     public ItemDto create(Long userId, ItemDto item) {
@@ -135,10 +140,20 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemDtoWithBookings> getAllItemsOfUser(Long userId) {
+    public List<ItemDtoWithBookings> getAllItemsOfUser(Long userId, Integer firstElement,
+        Integer numberOfElements) {
         log.info("Получаем все вещи пользователя #{} с бронированиями", userId);
-        Collection<Item> items = itemRepository.findAllByOwnerEquals(UserMapper.dtoToUser(
-            userService.getUserById((userId))));
+        if (firstElement == null) {
+            firstElement = DEFAULT_PAGE_FIRST_ELEMENT;
+        }
+        if (numberOfElements == null) {
+            numberOfElements = DEFAULT_PAGE_SIZE;
+        }
+        Sort sort = Sort.by(Direction.ASC, "id");
+        Page<Item> itemsPageable = itemRepository.findAllByOwnerEquals(UserMapper.dtoToUser(
+                userService.getUserById((userId))),
+            PageRequest.of(firstElement, numberOfElements, sort));
+        Collection<Item> items = itemsPageable.getContent();
         List<ItemDtoWithBookings> itemDtos = new ArrayList<>();
         for (Item item : items) {
             itemDtos.add(
@@ -150,12 +165,21 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Collection<ItemDto> getAllMatchingItems(String text) {
+    public Collection<ItemDto> getAllMatchingItems(String text, Integer firstElement,
+        Integer numberOfElements) {
         log.info("Получаем все вещи, содержащие строку {}", text);
+        if (firstElement == null) {
+            firstElement = DEFAULT_PAGE_FIRST_ELEMENT;
+        }
+        if (numberOfElements == null) {
+            numberOfElements = DEFAULT_PAGE_SIZE;
+        }
+        Sort sort = Sort.by(Direction.ASC, "id");
         if (text.isEmpty() || text.isBlank()) {
             return new ArrayList<>();
         }
-        Collection<Item> items = itemRepository.getAllMatchingItems(text);
+        Page<Item> items = itemRepository.getAllMatchingItems(text,
+            PageRequest.of(firstElement, numberOfElements, sort));
         Collection<ItemDto> itemDtos = new ArrayList<>();
         for (Item item : items) {
             itemDtos.add(ItemMapper.toItemDto(item));
@@ -166,20 +190,19 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public CommentDtoToReturn postComment(Long userId, Long itemId, CommentDto commentDto) {
         log.info("Постим комментарий пользователя #{} о вещи #{}", userId, itemId);
-        commentDto.setCreated(LocalDateTime.now());
-        checkComments(userId, itemId);
         commentDto.setAuthor(userRepository.getReferenceById(userId));
         commentDto.setItem(itemRepository.getReferenceById(itemId));
+        checkComments(userId, itemId, commentDto.getCreated());
         CommentDtoToReturn commentDtoToReturn = CommentMapper.commentToCommentDtoToReturn(
             commentRepository.save(CommentMapper.commentDtoToComment(commentDto)));
         log.info("Комментарий успешно опубликован");
         return commentDtoToReturn;
     }
 
-    private void checkComments(Long userId, Long itemId) {
-        if (bookingRepository.findByBookerIdAndEndIsBefore(userId, LocalDateTime.now(),
-                Sort.by(
-                    Direction.DESC, "start")).stream()
+    private void checkComments(Long userId, Long itemId, LocalDateTime created) {
+        Sort sort = Sort.by(Direction.DESC, "start");
+        if (bookingRepository.findByBookerIdAndEndIsBefore(userId, created,
+                PageRequest.of(DEFAULT_PAGE_FIRST_ELEMENT, DEFAULT_PAGE_SIZE, sort)).stream()
             .noneMatch(x -> x.getItem().getId().equals(itemId))) {
             throw new CommentNotAllowedException(
                 "Вы не можете оставлять комментарий для этой вещи");

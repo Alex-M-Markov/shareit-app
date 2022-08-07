@@ -49,16 +49,23 @@ public class BookingController {
     public Collection<BookingDtoToReturn> getAllBookingsOfUser(
         @RequestHeader(USER_HEADER) Long userId,
         @RequestParam(name = "state", required = false, defaultValue = "ALL")
-        BookingIncomingStates bookingState) {
-        return bookingServiceImpl.getAllBookingsOfUser(userId, bookingState);
+        BookingIncomingStates bookingState,
+        @RequestParam(name = "from", required = false) Integer firstElement,
+        @RequestParam(name = "size", required = false) Integer numberOfElements) {
+        return bookingServiceImpl.getAllBookingsOfUser(userId, bookingState, firstElement,
+            numberOfElements);
     }
 
     @GetMapping("/owner")
     public Collection<BookingDtoToReturn> getAllBookingsOfUserItems(
         @RequestHeader(USER_HEADER) Long userId,
         @RequestParam(name = "state", required = false, defaultValue = "ALL")
-        BookingIncomingStates bookingState) throws UnsupportedStatusException {
-        return bookingServiceImpl.getAllBookingsOfUserItems(userId, bookingState);
+        BookingIncomingStates bookingState,
+        @RequestParam(name = "from", required = false) Integer firstElement,
+        @RequestParam(name = "size", required = false) Integer numberOfElements)
+        throws UnsupportedStatusException {
+        return bookingServiceImpl.getAllBookingsOfUserItems(userId, bookingState, firstElement,
+            numberOfElements);
     }
 
     @ExceptionHandler(UnsupportedStatusException.class)
