@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
 import javax.persistence.EntityNotFoundException;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,7 @@ import shareit.app.exceptions.UserNotFoundException;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Data
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;

@@ -12,9 +12,11 @@ public interface ItemService {
 
     ItemDtoWithBookings getItemByIdWithBookings(Long userId, Long itemId);
 
-    Collection<ItemDtoWithBookings> getAllItemsOfUser(Long userId);
+    Collection<ItemDtoWithBookings> getAllItemsOfUser(Long userId, Integer firstElement,
+        Integer numberOfElements);
 
-    Collection<ItemDto> getAllMatchingItems(String text);
+    Collection<ItemDto> getAllMatchingItems(String text, Integer firstElement,
+        Integer numberOfElements);
 
     CommentDtoToReturn postComment(Long userId, Long itemId, CommentDto commentDto);
 

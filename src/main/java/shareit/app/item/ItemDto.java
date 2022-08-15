@@ -4,7 +4,6 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import shareit.app.request.ItemRequest;
 
 @Data
 @AllArgsConstructor
@@ -19,6 +18,6 @@ public class ItemDto {
     private String description;
     @NotNull
     private Boolean available;
-    private ItemRequest request;
+    private Long requestId;
 
 }

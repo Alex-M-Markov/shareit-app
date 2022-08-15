@@ -7,6 +7,7 @@ import java.util.Objects;
 import javax.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,8 @@ public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final UserService userService;
     private final ItemService itemService;
+    private static final Integer DEFAULT_PAGE_FIRST_ELEMENT = 0;
+    private static final Integer DEFAULT_PAGE_SIZE = 20;
 
     @Override
     public BookingDtoToReturn create(Long userId, BookingDtoIncoming booking) {
@@ -57,7 +60,7 @@ public class BookingServiceImpl implements BookingService {
         if (itemService.getItemById(booking.getItemId()).getAvailable().equals(false)) {
             throw new IllegalBookingException("Эта вещь недоступна для бронирования");
         }
-        if (itemService.getAllItemsOfUser(userId).stream()
+        if (itemService.getAllItemsOfUser(userId, null, null).stream()
             .anyMatch(x -> x.getId().equals(booking.getItemId()))) {
             throw new IllegalBookingAccess("Нельзя забронировать собственную вещь");
         }
@@ -102,11 +105,17 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public Collection<BookingDtoToReturn> getAllBookingsOfUser(Long userId,
-        BookingIncomingStates bookingState) {
+        BookingIncomingStates bookingState, Integer firstElement, Integer numberOfElements) {
         if (bookingState.equals(BookingIncomingStates.UNSUPPORTED_STATUS)) {
             throw new UnsupportedStatusException("Unknown state: UNSUPPORTED_STATUS");
         }
         log.info("Получаем все бронирования пользователя #{} со статусом {}", userId, bookingState);
+        if (firstElement == null) {
+            firstElement = DEFAULT_PAGE_FIRST_ELEMENT;
+        }
+        if (numberOfElements == null) {
+            numberOfElements = DEFAULT_PAGE_SIZE;
+        }
         Sort sort = Sort.by(Direction.DESC, "start");
         LocalDateTime now = LocalDateTime.now();
         if (userService.getUserById(userId) == null) {
@@ -114,23 +123,26 @@ public class BookingServiceImpl implements BookingService {
         }
         switch (bookingState) {
             case ALL:
-                return bookingsToDtos(bookingRepository.findByBookerId(userId, sort));
+                return bookingsToDtos(bookingRepository.findByBookerId(userId,
+                    PageRequest.of(firstElement, numberOfElements, sort)).getContent());
             case CURRENT:
                 return bookingsToDtos(
                     bookingRepository.findByBookerIdAndStartIsBeforeAndEndIsAfter(userId, now, now,
-                        sort));
+                        PageRequest.of(firstElement, numberOfElements, sort)).getContent());
             case WAITING:
                 return bookingsToDtos(bookingRepository.findByBookerIdAndStatusIs(userId,
-                    BookingStatus.WAITING, sort));
+                        BookingStatus.WAITING, PageRequest.of(firstElement, numberOfElements, sort))
+                    .getContent());
             case REJECTED:
                 return bookingsToDtos(bookingRepository.findByBookerIdAndStatusIs(userId,
-                    BookingStatus.REJECTED, sort));
+                        BookingStatus.REJECTED, PageRequest.of(firstElement, numberOfElements, sort))
+                    .getContent());
             case PAST:
                 return bookingsToDtos(bookingRepository.findByBookerIdAndEndIsBefore(userId,
-                    now, sort));
+                    now, PageRequest.of(firstElement, numberOfElements, sort)).getContent());
             case FUTURE:
                 return bookingsToDtos(bookingRepository.findByBookerIdAndEndIsAfter(userId,
-                    now, sort));
+                    now, PageRequest.of(firstElement, numberOfElements, sort)).getContent());
         }
         throw new IllegalBookingAccess("Невозможно получить вещи другого пользователя");
     }
@@ -145,15 +157,22 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public Collection<BookingDtoToReturn> getAllBookingsOfUserItems(Long userId,
-        BookingIncomingStates bookingState) {
+        BookingIncomingStates bookingState, Integer firstElement, Integer numberOfElements) {
         if (bookingState.equals(BookingIncomingStates.UNSUPPORTED_STATUS)) {
             throw new UnsupportedStatusException("Unknown state: UNSUPPORTED_STATUS");
         }
         log.info("Получаем все бронирования вещей пользователя #{} со статусом {}", userId,
             bookingState);
+        if (firstElement == null) {
+            firstElement = DEFAULT_PAGE_FIRST_ELEMENT;
+        }
+        if (numberOfElements == null) {
+            numberOfElements = DEFAULT_PAGE_SIZE;
+        }
         Sort sort = Sort.by(Direction.DESC, "start");
         LocalDateTime now = LocalDateTime.now();
-        if (bookingRepository.findAllByItemOwnerId(userId, sort) == null) {
+        if (bookingRepository.findAllByItemOwnerId(userId,
+            PageRequest.of(firstElement, numberOfElements, sort)) == null) {
             throw new ItemNotFoundException();
         }
         if (userService.getUserById(userId) == null) {
@@ -161,27 +180,31 @@ public class BookingServiceImpl implements BookingService {
         }
         switch (bookingState) {
             case ALL:
-                return bookingsToDtos(bookingRepository.findAllByItemOwnerId(userId, sort));
+                return bookingsToDtos(bookingRepository.findAllByItemOwnerId(userId,
+                    PageRequest.of(firstElement, numberOfElements, sort)).getContent());
             case CURRENT:
                 return bookingsToDtos(
                     bookingRepository.findAllByItemOwnerIdAndStartIsBeforeAndEndIsAfter(userId,
-                        now, now, sort));
+                            now, now, PageRequest.of(firstElement, numberOfElements, sort))
+                        .getContent());
             case WAITING:
                 return bookingsToDtos(
-                    bookingRepository.findAllByItemOwnerIdAndStatusIs(userId,
-                        BookingStatus.WAITING, sort));
+                    bookingRepository.findAllByItemOwnerIdAndStatusIs(userId, BookingStatus.WAITING,
+                            PageRequest.of(firstElement, numberOfElements, sort))
+                        .getContent());
             case REJECTED:
                 return bookingsToDtos(
                     bookingRepository.findAllByItemOwnerIdAndStatusIs(userId,
-                        BookingStatus.REJECTED, sort));
+                        BookingStatus.REJECTED,
+                        PageRequest.of(firstElement, numberOfElements, sort)).getContent());
             case PAST:
                 return bookingsToDtos(
                     bookingRepository.findAllByItemOwnerIdAndEndIsBefore(userId,
-                        now, sort));
+                        now, PageRequest.of(firstElement, numberOfElements, sort)).getContent());
             case FUTURE:
                 return bookingsToDtos(
                     bookingRepository.findAllByItemOwnerIdAndEndIsAfter(userId,
-                        now, sort));
+                        now, PageRequest.of(firstElement, numberOfElements, sort)).getContent());
         }
         throw new IllegalBookingAccess("Невозможно получить вещи другого пользователя");
     }

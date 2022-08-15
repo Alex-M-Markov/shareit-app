@@ -11,14 +11,14 @@ public class ItemMapper {
 
     public static ItemDto toItemDto(Item item) {
         return new ItemDto(item.getId(), item.getName(), item.getDescription(), item.getAvailable(),
-            item.getRequest()
+            item.getRequestId()
         );
     }
 
     public static ItemDtoWithBookings toItemDtoWithBookings(Item item, Booking lastBooking,
         Booking nextBooking, Collection<CommentDtoToReturn> comments) {
         ItemDtoWithBookings itemDtoWithBookings = new ItemDtoWithBookings(item.getId(),
-            item.getName(), item.getDescription(), item.getAvailable(), item.getRequest(),
+            item.getName(), item.getDescription(), item.getAvailable(), item.getRequestId(),
             new ItemDtoWithBookings.Booking(), new ItemDtoWithBookings.Booking(), comments);
         if (lastBooking == null && nextBooking == null) {
             itemDtoWithBookings.setNextBooking(null);
@@ -45,7 +45,7 @@ public class ItemMapper {
 
     public static Item dtoToItem(ItemDto itemDto, UserDto user) {
         return new Item(itemDto.getId(), itemDto.getName(), itemDto.getDescription(),
-            itemDto.getAvailable(), UserMapper.dtoToUser(user), itemDto.getRequest());
+            itemDto.getAvailable(), UserMapper.dtoToUser(user), itemDto.getRequestId());
     }
 
 }
