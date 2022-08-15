@@ -1,6 +1,5 @@
 package shareit.app.item;
 
-import java.time.LocalDateTime;
 import java.util.Collection;
 import javax.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -60,7 +59,6 @@ public class ItemController {
     @PostMapping("/{itemId}/comment")
     public CommentDtoToReturn postComment(@RequestHeader(USER_HEADER) Long userId,
         @PathVariable Long itemId, @Valid @RequestBody CommentDto commentDto) {
-        commentDto.setCreated(LocalDateTime.now());
         return itemServiceImpl.postComment(userId, itemId, commentDto);
     }
 

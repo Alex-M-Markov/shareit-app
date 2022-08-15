@@ -43,12 +43,14 @@ public class ItemRequestControllerTests {
     private static final Integer DEFAULT_PAGE_FIRST_ELEMENT = 0;
     private static final Integer DEFAULT_PAGE_SIZE = 20;
 
-    ItemRequestDto itemRequestDto = new ItemRequestDto(1L, "Хочу собаку",
+    private final ItemRequestDto itemRequestDto = new ItemRequestDto(1L, "Хочу собаку",
         new ItemRequestDto.User(1L, "Новый пользователь", "user5@gmail.com"), start);
-    ItemRequestDtoWithAnswers itemRequestDtoWithAnswers = new ItemRequestDtoWithAnswers(1L,
+    private final ItemRequestDtoWithAnswers itemRequestDtoWithAnswers = new ItemRequestDtoWithAnswers(
+        1L,
         "Хочу собаку", new ItemRequestDtoWithAnswers.User(2L, "Восьмой", "newage@yahoo.com"),
         new ArrayList<>(), start);
-    ItemRequestDtoWithAnswers itemRequestDtoWithAnswers2 = new ItemRequestDtoWithAnswers(2L,
+    private final ItemRequestDtoWithAnswers itemRequestDtoWithAnswers2 = new ItemRequestDtoWithAnswers(
+        2L,
         "Хочу кошку", new ItemRequestDtoWithAnswers.User(2L, "Восьмой", "newage@yahoo.com"),
         new ArrayList<>(), end);
 

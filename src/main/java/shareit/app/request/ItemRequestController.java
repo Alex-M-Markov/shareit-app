@@ -1,6 +1,5 @@
 package shareit.app.request;
 
-import java.time.LocalDateTime;
 import java.util.Collection;
 import javax.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -25,7 +24,6 @@ public class ItemRequestController {
     @PostMapping
     public ItemRequestDto create(@RequestHeader(USER_HEADER) Long userId,
         @Valid @RequestBody ItemRequestDto itemRequest) {
-        itemRequest.setCreated(LocalDateTime.now());
         return itemRequestServiceImpl.create(userId, itemRequest);
     }
 

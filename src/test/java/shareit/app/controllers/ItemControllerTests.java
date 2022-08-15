@@ -60,7 +60,8 @@ public class ItemControllerTests {
         false, null, null, null, new ArrayList<>());
     private final CommentDto comment = new CommentDto(1L, "Супер, очень понравилось", item2, user2,
         LocalDateTime.now());
-    CommentDtoToReturn commentDtoToReturn = new CommentDtoToReturn(1L, "Супер, очень понравилось",
+    private final CommentDtoToReturn commentDtoToReturn = new CommentDtoToReturn(1L,
+        "Супер, очень понравилось",
         "Восьмой", start);
 
     @BeforeEach

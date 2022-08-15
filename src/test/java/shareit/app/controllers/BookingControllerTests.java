@@ -46,13 +46,15 @@ public class BookingControllerTests {
     private final LocalDateTime newEnd = LocalDateTime.of(2023, 1, 5, 12, 5);
     private static final Integer DEFAULT_PAGE_FIRST_ELEMENT = 0;
     private static final Integer DEFAULT_PAGE_SIZE = 20;
-    BookingDtoToReturn bookingDtoToReturn = new BookingDtoToReturn(10L, start, end,
+    private final BookingDtoToReturn bookingDtoToReturn = new BookingDtoToReturn(10L, start, end,
         new BookingDtoToReturn.Item(2L, "Стул"), new Booker(8L, "Восьмой"),
         BookingStatus.WAITING);
-    BookingDtoToReturn bookingDtoToReturn2 = new BookingDtoToReturn(14L, start, newEnd,
+    private final BookingDtoToReturn bookingDtoToReturn2 = new BookingDtoToReturn(14L, start,
+        newEnd,
         new BookingDtoToReturn.Item(3L, "Табуретка"), new Booker(8L, "Восьмой"),
         BookingStatus.WAITING);
-    BookingDtoToReturn bookingDtoToReturnUpdated = new BookingDtoToReturn(10L, start, newEnd,
+    private final BookingDtoToReturn bookingDtoToReturnUpdated = new BookingDtoToReturn(10L, start,
+        newEnd,
         new BookingDtoToReturn.Item(2L, "Стул"), new Booker(8L, "Восьмой"),
         BookingStatus.REJECTED);
 
